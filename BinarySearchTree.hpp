@@ -77,9 +77,21 @@ namespace ft {
             pointer __end;
             size_type __size;
             pointer __find(const key_type& key);
-            void __insert(pointer node) {
-                if (cmp(node->_data, __root->_data)) {
-                    //
+            void __insert(pointer node, pointer root) {
+                if (cmp(node->__pair, root->__pair)) {
+                    if (root->__left == nullptr) {
+                        root->__left = node;
+                        node->__parent = root;
+                    }
+                    else
+                        __insert(node, root->__left);
+                } else {
+                    if (root->__right == nullptr) {
+                        root->__right = node;
+                        node->__parent = root;
+                    }
+                    else
+                        __insert(node, root->__right);
                 }
             }
             void __remove(const pair_type& p);
@@ -91,6 +103,7 @@ namespace ft {
                 __size = 0;
             }
             value_type& operator[](const key_type& key) {
+                // just a demo
                 return __root->__pair.second;
             }
             ~BinarySearchTree() {
@@ -102,7 +115,7 @@ namespace ft {
                 if (__root == nullptr)
                     __root = node;
                 else
-                    __insert(node);
+                    __insert(node, __root);
             }
             void remove(const pair_type& p);
     };
