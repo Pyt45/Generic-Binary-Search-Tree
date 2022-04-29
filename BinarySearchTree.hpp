@@ -28,7 +28,7 @@ namespace ft {
     };
     template<class K, class V>
     bool operator<(const pair<K, V>& x, const pair<K, V>& y) {
-        return x.first < y.fisrt;
+        return x.first < y.first;
     }
     template <class T1,class T2>
         pair<T1,T2> make_pair (T1 x, T2 y)
@@ -61,22 +61,33 @@ namespace ft {
             return x < y;
         }
     };
-    template <class K, class V, class Compare = less< pair<K, V> > >
+    template < class K, class V, class Compare = less< pair<K, V> >, class Keycomp = std::less<K> >
     class BinarySearchTree {
         public:
             using key_type = K;
             using value_type = V;
-            using key_compare = Compare;
+            using pair_compare = Compare;
+            using key_compare = Keycomp;
             using pair_type = pair<const key_type, value_type>;
             using pointer = Tree<pair_type>*;
             using size_type = std::size_t;
         private:
-            key_compare cmp;
+            pair_compare cmp;
+            key_compare kcmp;
             pointer __root;
             pointer __begin;
             pointer __end;
             size_type __size;
-            pointer __find(const key_type& key);
+            pointer __find(const key_type& key, pointer root) const {
+                if (root == nullptr)
+                    return nullptr;
+                if (root->__pair.first == key)
+                    return root;
+                if (kcmp(key, root->__pair.first))
+                    return __find(key, root->__left);
+                else
+                    return __find(key, root->__right);
+            }
             void __insert(pointer node, pointer root) {
                 if (cmp(node->__pair, root->__pair)) {
                     if (root->__left == nullptr) {
@@ -96,27 +107,41 @@ namespace ft {
             }
             void __remove(const pair_type& p);
         public:
+            class NotFound: public std::exception {
+                public:
+                    virtual const char* what() const throw() override {
+                        return "not found";
+                    }
+            };
             BinarySearchTree() {
                 __root = nullptr;
                 // __begin = nullptr;
                 // __end = nullptr;
                 __size = 0;
             }
-            value_type& operator[](const key_type& key) {
-                // just a demo
-                return __root->__pair.second;
+            value_type& operator[](const key_type& key) const {
+                pointer found = __find(key, __root);
+                if (found)
+                    return found->__pair.second;
+                throw NotFound();
             }
             ~BinarySearchTree() {
                 // delete all pointers
             }
-            pointer find(const key_type& key);
+            pointer find(const key_type& key) const {
+                return __find(key, __root);
+            }
             void insert(const pair_type& p) {
                 pointer node = new Tree<pair_type>(p);
                 if (__root == nullptr)
                     __root = node;
                 else
                     __insert(node, __root);
+                __size++;
             }
             void remove(const pair_type& p);
+            size_type size() const {
+                return __size;
+            }
     };
 }
